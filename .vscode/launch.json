@@ -22,7 +22,7 @@
                 "--dataset", "mnli",
                 "--num-process", "10",
                 "--devices", "0,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.49,0.44,0.84,0.56",
                 "--mask-type", "synt_pos"
             ],
@@ -39,7 +39,7 @@
                 "--dataset", "mnli",
                 "--num-process", "10",
                 "--devices", "0,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--mask-type", "orig"
             ],
             "justMyCode": false,
@@ -54,7 +54,7 @@
                 "--dataset", "mnli",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.49,0.44,0.84,0.56",
                 "--mask-type", "upos_pos"
             ],
@@ -84,7 +84,7 @@
                 "--dataset", "sst2",
                 "--num-process", "10",
                 "--devices", "0,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.46,0.43,0.76,0.72",
                 "--mask-type", "synt_pos"
             ],
@@ -151,9 +151,51 @@
                 "--dataset", "sst2",
                 "--num-process", "10",
                 "--devices", "0,1,2,3",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.46,0.43,0.76,0.72",
                 "--mask-type", "orig"
+            ],
+            "justMyCode": false,
+        },
+        {
+            "name": "run sst2 attn",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--dataset", "sst2",
+                "--num-process", "10",
+                "--devices", "0,1,2,3",
+                "--expl-method", "generate_attn_last_layer",
+            ],
+            "justMyCode": false,
+        },
+        {
+            "name": "run sst2 rollout",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--dataset", "sst2",
+                "--num-process", "10",
+                "--devices", "0,1,2,3",
+                "--expl-method", "generate_rollout",
+            ],
+            "justMyCode": false,
+        },
+        {
+            "name": "run sst2 grad",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--dataset", "sst2",
+                "--num-process", "10",
+                "--devices", "0,1,2,3",
+                "--expl-method", "generate_gradcam",
             ],
             "justMyCode": false,
         },
@@ -181,7 +223,7 @@
                 "--dataset", "sst2",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.46,0.43,0.76,0.72",
                 "--mask-type", "upos_pos"
             ],
@@ -197,7 +239,7 @@
                 "--dataset", "squadv1",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.46,0.43,0.76,0.72",
                 "--mask-type", "synt_pos"
             ],
@@ -213,7 +255,7 @@
                 "--dataset", "yelp",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.49,0.47,0.82,0.63",
                 "--mask-type", "synt_pos"
             ],
@@ -229,7 +271,7 @@
                 "--dataset", "yelp",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.49,0.47,0.82,0.63",
                 "--mask-type", "upos_pos"
             ],
@@ -245,7 +287,7 @@
                 "--dataset", "yelp",
                 "--num-process", "1",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--mask-type", "orig"
             ],
             "justMyCode": false,
@@ -274,7 +316,7 @@
                 "--dataset", "imdb",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.44,0.44,0.80,0.58",
                 "--mask-type", "synt_pos"
             ],
@@ -290,7 +332,7 @@
                 "--dataset", "imdb",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.44,0.44,0.80,0.58",
                 "--mask-type", "upos_pos"
             ],
@@ -306,7 +348,7 @@
                 "--dataset", "imdb",
                 "--num-process", "10",
                 "--devices", "0,1,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.44,0.44,0.80,0.58",
                 "--mask-type", "orig"
             ],
@@ -352,7 +394,7 @@
                 "--dataset", "qqp",
                 "--num-process", "10",
                 "--devices", "0,2",
-                "--expl-method", "generate_LRP",
+                "--expl-method", "GAE",
                 "--synt-thres", "0.57,0.41,0.84,0.46",
                 "--mask-type", "synt_pos"
             ],

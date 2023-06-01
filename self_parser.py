@@ -11,5 +11,5 @@ parser.add_argument('--pos-thres', default=0.8, type=float, help='threshold for 
 parser.add_argument('--upos-thres', default=0.5, type=float, help='threshold for upos statistics')
 parser.add_argument('--parsed-path', default='/home/linxin/xai/Transformer-Explainability/parse_res/', type=str, help='path to the parsed dataset')
 parser.add_argument('--data-path', default='/home/linxin/data/', type=str, help='path to the original dataset')
-parser.add_argument('--mask-type', default='synt_pos', choices=['synt', 'synt_pos', 'synt_upos', 'upos', 'upos_pos', 'pos', 'all', 'random', 'orig'], help='mask type use for LRP')
+parser.add_argument('--mask-type', default='orig', choices=['synt', 'synt_pos', 'synt_upos', 'upos', 'upos_pos', 'pos', 'all', 'random', 'orig'], help='mask type use for LRP')
 parser.add_argument('--save-path', default='./res', type=str, help='path for saving results')

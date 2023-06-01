@@ -2,14 +2,11 @@ from __future__ import absolute_import
 
 import torch
 from torch import nn
-import torch.nn.functional as F
 import math
-from transformers import BertConfig
 from transformers.modeling_outputs import BaseModelOutputWithPooling, BaseModelOutput
 from BERT_explainability.modules.layers_ours import *
 from transformers import (
     BertPreTrainedModel,
-    PreTrainedModel,
 )
 
 ACT2FN = {
@@ -237,6 +234,7 @@ class BertAttention(nn.Module):
 
 
 class BertSelfAttention(RelProp):
+    
     def __init__(self, config):
         super().__init__()
         if config.hidden_size % config.num_attention_heads != 0 and not hasattr(config, "embedding_size"):
@@ -363,16 +361,15 @@ class BertSelfAttention(RelProp):
         cam = self.transpose_for_scores(cam)
 
         # [attention_probs, value_layer]
-        (cam1, cam2) = self.matmul2.relprop(cam * self.head_mask, **kwargs)
-        (cam1_preserve, _) = self.matmul2.relprop(cam, **kwargs)
-
+        if self.head_mask is not None:
+            (cam1, cam2) = self.matmul2.relprop(cam * self.head_mask, **kwargs)
+            (cam1_preserve, _) = self.matmul2.relprop(cam, **kwargs)
+        else:
+            (cam1, cam2) = self.matmul2.relprop(cam, **kwargs)
         cam1 /= 2
         cam2 /= 2
 
         self.save_attn_cam(cam1_preserve)
-
-        if self.head_mask is not None:
-            cam1 = torch.mul(cam1, self.head_mask)
 
         cam1 = self.dropout.relprop(cam1, **kwargs)
         cam1 = self.softmax.relprop(cam1, **kwargs)

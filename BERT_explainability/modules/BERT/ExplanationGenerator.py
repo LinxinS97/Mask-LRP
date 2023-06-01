@@ -1,7 +1,5 @@
-import argparse
 import numpy as np
 import torch
-import glob
 
 # compute rollout between attention layers
 def compute_rollout_attention(all_layer_matrices, start_layer=0):
@@ -92,7 +90,7 @@ class Generator:
         return cat_expln.detach().cpu().numpy()
 
 
-    def generate_LRP(self, input_ids, attention_mask,
+    def GAE(self, input_ids, attention_mask,
                      index=None, start_layer=0, output_attentions=False, 
                      head_mask=None, token_type_ids=None):
         
@@ -170,9 +168,10 @@ class Generator:
 
     def generate_LRP_last_layer(self, input_ids, attention_mask,
                                 index=None, start_layer=0, output_attentions=False, 
-                                head_mask=None):
+                                head_mask=None, token_type_ids=None):
         output = self.model(input_ids=input_ids, 
                             attention_mask=attention_mask, 
+                            token_type_ids=token_type_ids,
                             head_mask=head_mask, 
                             output_attentions=output_attentions, 
                             output_hidden_states=True)[0]
@@ -199,9 +198,10 @@ class Generator:
 
     def generate_full_lrp(self, input_ids, attention_mask,
                           index=None, start_layer=0, output_attentions=False, 
-                          head_mask=None):
+                          head_mask=None, token_type_ids=None):
         output = self.model(input_ids=input_ids, 
                             attention_mask=attention_mask, 
+                            token_type_ids=token_type_ids,
                             head_mask=head_mask, 
                             output_attentions=output_attentions, 
                             output_hidden_states=True)[0]
@@ -227,17 +227,21 @@ class Generator:
 
     def generate_attn_last_layer(self, input_ids, attention_mask,
                                  index=None, start_layer=0, output_attentions=False, 
-                                 head_mask=None):
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
+                                 head_mask=None, token_type_ids=None):
+        output = self.model(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)[0]
         cam = self.model.bert.encoder.layer[-1].attention.self.get_attn()[0]
         cam = cam.mean(dim=0).unsqueeze(0)
         cam[:, 0, 0] = 0
         return cam[:, 0].detach().cpu().numpy(), None
 
 
-    def generate_rollout(self, input_ids, attention_mask, start_layer=0, index=None):
+    def generate_rollout(self, input_ids, attention_mask,
+                         index=None, start_layer=0, output_attentions=False, 
+                         head_mask=None, token_type_ids=None):
         self.model.zero_grad()
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask)[0]
+        output = self.model(input_ids=input_ids, 
+                            attention_mask=attention_mask, 
+                            token_type_ids=token_type_ids)[0]
         blocks = self.model.bert.encoder.layer
         all_layer_attentions = []
         for blk in blocks:
@@ -251,13 +255,11 @@ class Generator:
 
     def generate_attn_gradcam(self, input_ids, attention_mask,
                               index=None, start_layer=0, output_attentions=False, 
-                              head_mask=None):
+                              head_mask=None, token_type_ids=None):
         
         output = self.model(input_ids=input_ids, 
                             attention_mask=attention_mask, 
-                            head_mask=head_mask, 
-                            output_attentions=output_attentions, 
-                            output_hidden_states=True)[0]
+                            token_type_ids=token_type_ids)[0]
         kwargs = {"alpha": 1}
 
         if index == None:
@@ -286,3 +288,33 @@ class Generator:
 
         return cam[:, 0].detach().cpu().numpy(), None
 
+
+    def generate_gradcam(self, input_ids, attention_mask,
+                         index=None, start_layer=0, output_attentions=False, 
+                         head_mask=None, token_type_ids=None):
+        output = self.model(input_ids=input_ids, 
+                            attention_mask=attention_mask, 
+                            token_type_ids=token_type_ids)[0]
+        kwargs = {"alpha": 1}
+
+        if index == None:
+            index = np.argmax(output.cpu().data.numpy(), axis=-1)
+
+        one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
+        one_hot[0, index] = 1
+        one_hot_vector = one_hot
+        one_hot = torch.from_numpy(one_hot).requires_grad_(True)
+        one_hot = torch.sum(one_hot.to(input_ids.device) * output)
+
+        self.model.zero_grad()
+        one_hot.backward(retain_graph=True)
+
+        self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
+
+        grad = self.model.bert.encoder.layer[-1].attention.self.get_attn_gradients()
+
+        grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
+        grad = grad.mean(dim=[1, 2], keepdim=True)
+        grad[:, 0, 0] = 0
+        
+        return grad[:, 0].detach().cpu().numpy(), None
