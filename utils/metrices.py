@@ -73,10 +73,10 @@ def replace_words(sorted_idx, text_words, text_ids, replaced_num, special_tokens
         i += 1
     replaced_text_ids = text_ids.clone()
     replaced_text_ids[0, to_be_replaced_idx] = mask_id
-    replaced_text_words = np.copy(text_words)
-    replaced_text_words[to_be_replaced_idx] = mask
+    # replaced_text_words = np.copy(text_words)
+    # replaced_text_words[to_be_replaced_idx] = mask
 
-    return replaced_text_ids, replaced_text_words
+    return replaced_text_ids
 
 
 def cal_kendaltau(attribution1, attribution2):
