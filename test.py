@@ -25,19 +25,7 @@ task_model = {
     "squadv2": "deepset/bert-base-uncased-squad2"
 }
 
-special_tokens = ["[CLS]", "[SEP]"]
-special_idxs = [101, 102]
-mask = "[PAD]"
-mask_id = 0
-
 upos_type = ['VERB', 'NOUN', 'ADV', 'ADJ', 'INTJ', 'PROPN']
-
-error_cnt = 0
-unseen_upos = set()
-unseen_dtype = set()
-error_data = {
-    0: {}, 1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}, 11: {}
-}
 
 
 
@@ -45,9 +33,6 @@ def generate_expl(input_ids, attention_mask, token_type_ids, target_class, head_
     expl_generator = Generator(model)
     token_type_ids = None
 
-    # true class is positive - 1
-
-    # generate an explanation for the input
     expl_func = getattr(expl_generator, expl_method, None)
     if expl_func == None:
         raise('Explanation method not exist.')
@@ -108,6 +93,12 @@ def calc_cls_metrics(dataset, data_name, model, tokenizer, head_mask=None, expl_
             target = test_instance['label']
         
         input_ids, att_mask, text_words, token_type_ids = preprocess_sample(input, tokenizer, model.device, data_name)
+
+        # For duplicated quesion matching, model will turn the prediction to 0 if we prune all influencial tokens
+        # But if the ground truth is initially 1, model's confidence will not change.
+        # So we only test the matched data with ground truth label equals to 1.
+        if data_name == 'qqp' and target == 0:
+            continue
         
         # get truc words number
         total_len = len(text_words)
@@ -119,19 +110,20 @@ def calc_cls_metrics(dataset, data_name, model, tokenizer, head_mask=None, expl_
         trunc_words_num = list(dict.fromkeys(trunc_words_num))
         
         _, original_prob = predict(model, input_ids, target, seg_ids=token_type_ids)
-
-        # if data_name == 'qqp' and (target == 1 or original_prob < 0.5):
-        #     continue
-
-        # if data_name == 'mnli' and original_prob < 0.34:  # make sure the model make an accurate prediction.
-        #     continue
+        
+        
+        # make sure the model make an accurate prediction.
+        if data_name == 'qqp' and original_prob < 0.3:
+            continue
+        if data_name == 'mnli' and original_prob < 0.34:
+            continue
 
         expl = generate_expl(input_ids, att_mask, token_type_ids, target, head_mask, model, expl_method)
         expl_F = generate_expl(input_ids, att_mask, token_type_ids, 1 - target, head_mask, model, expl_method)
         sorted_idx = np.argsort(-expl)
 
         for num in trunc_words_num[1:]:
-            replaced_text_ids = replace_words(sorted_idx, text_words, input_ids, num, special_tokens=special_tokens)
+            replaced_text_ids = replace_words(sorted_idx, text_words, input_ids, num, data_name=data_name)
 
             rep_class, rep_prob = predict(model, replaced_text_ids, target, seg_ids=token_type_ids)
 
@@ -192,6 +184,10 @@ if __name__ == '__main__':
     data_path = args.data_path
     mask_type = args.mask_type
     save_path = args.save_path
+
+    if dataset == 'qqp':
+        special_tokens = []
+        special_idxs = []
 
     for d in devices:
         if dataset in ['squadv1', 'squadv2']:
@@ -337,8 +333,11 @@ if __name__ == '__main__':
             logodds += result[1]
             kendaltaus += result[2]
 
-        aopc = np.mean(aopc)
-        logodds = np.mean(logodds)
+        aopc = np.array(aopc)
+        logodds = np.array(logodds)
+
+        aopc = np.mean(aopc[~np.isnan(aopc)])
+        logodds = np.mean(logodds[~np.isnan(logodds)])
         k = np.mean(kendaltaus)
 
         print(aopc, logodds, k)

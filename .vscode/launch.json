@@ -350,10 +350,10 @@
             "console": "integratedTerminal",
             "args": [
                 "--dataset", "qqp",
-                "--num-process", "1",
-                "--devices", "0",
+                "--num-process", "10",
+                "--devices", "0,2",
                 "--expl-method", "generate_LRP",
-                "--synt-thres", "0.55,0.39,0.82,0.45",
+                "--synt-thres", "0.57,0.41,0.84,0.46",
                 "--mask-type", "synt_pos"
             ],
             "justMyCode": false,

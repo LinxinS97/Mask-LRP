@@ -56,15 +56,14 @@ def truncate_words(sorted_idx, text_words, text_ids, replaced_num, seg_ids=None,
     return truncated_text_ids.unsqueeze(0), truncated_text_words, seg_ids
 
 
-def replace_words(sorted_idx, text_words, text_ids, replaced_num, special_tokens=None):
-    mask = "[PAD]"
+def replace_words(sorted_idx, text_words, text_ids, replaced_num, data_name=None):
+    special_tokens = ["[CLS]", "[SEP]"]
+    special_idxs = [101, 102]
+
     mask_id = 0
 
     to_be_replaced_idx = []
     i= 0
-
-    # sep_idx = text_words.index('[SEP]')
-    # sorted_idx = sorted_idx[sorted_idx < sep_idx]
 
     while len(to_be_replaced_idx) < replaced_num and i != len(sorted_idx) - 1:
         current_idx = sorted_idx[i]
@@ -73,8 +72,6 @@ def replace_words(sorted_idx, text_words, text_ids, replaced_num, special_tokens
         i += 1
     replaced_text_ids = text_ids.clone()
     replaced_text_ids[0, to_be_replaced_idx] = mask_id
-    # replaced_text_words = np.copy(text_words)
-    # replaced_text_words[to_be_replaced_idx] = mask
 
     return replaced_text_ids
 

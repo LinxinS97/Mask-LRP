@@ -363,16 +363,16 @@ class BertSelfAttention(RelProp):
         cam = self.transpose_for_scores(cam)
 
         # [attention_probs, value_layer]
-        (cam1, cam2) = self.matmul2.relprop(cam, **kwargs)
+        (cam1, cam2) = self.matmul2.relprop(cam * self.head_mask, **kwargs)
+        (cam1_preserve, _) = self.matmul2.relprop(cam, **kwargs)
 
         cam1 /= 2
         cam2 /= 2
 
-        self.save_attn_cam(cam1)
+        self.save_attn_cam(cam1_preserve)
 
         if self.head_mask is not None:
             cam1 = torch.mul(cam1, self.head_mask)
-            
 
         cam1 = self.dropout.relprop(cam1, **kwargs)
         cam1 = self.softmax.relprop(cam1, **kwargs)
@@ -640,6 +640,7 @@ class BertModel(BertPreTrainedModel):
     def relprop(self, cam, **kwargs):
         cam = self.pooler.relprop(cam, **kwargs)
         cam = self.encoder.relprop(cam, **kwargs)
+        cam = self.embeddings.relprop(cam, **kwargs)[1]
         return cam
 
 

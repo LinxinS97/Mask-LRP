@@ -75,7 +75,6 @@ class ReLU(nn.ReLU, RelProp):
 class GELU(nn.GELU, RelProp):
     pass
 
-
 class Softmax(nn.Softmax, RelProp):
     pass
 
@@ -90,17 +89,6 @@ class Tanh(nn.Tanh, RelProp):
 
 
 class LayerNorm(nn.LayerNorm, RelProp):
-    # implementation of "XAI for Transformers: Better Explanations through Conservative Propagation" ICML 2022
-    # def relprop(self, R, alpha):
-    #     # [layers, features, features]
-    #     C = torch.cat([torch.eye(R.shape[2]) - (1 / R.shape[2]) * torch.ones(R.shape[2]) for _ in range(R.shape[1])]).reshape(R.shape[1], R.shape[2], R.shape[2])
-    #     C = C.to(R.device)
-    #     res = torch.zeros(R.shape).to(R.device)
-    #     for i in range(R.shape[1]):
-    #         numerator = self.X.squeeze()[i].unsqueeze(1) * C[i]
-    #         denominator = torch.sum(self.X.squeeze()[i].unsqueeze(1) * C[i], dim=0)
-    #         res[:, i, :] = torch.sum(numerator / denominator * R[:, i, :], dim=1)
-    #     return res
     pass
 
 
@@ -241,7 +229,6 @@ class BatchNorm2d(nn.BatchNorm2d, RelProp):
 
 class Linear(nn.Linear, RelProp):
     def relprop(self, R, alpha):
-        beta = alpha - 1
         pw = torch.clamp(self.weight, min=0)
         nw = torch.clamp(self.weight, max=0)
         px = torch.clamp(self.X, min=0)
@@ -257,10 +244,7 @@ class Linear(nn.Linear, RelProp):
 
             return C1 + C2
 
-        activator_relevances = f(pw, nw, px, nx)
-        inhibitor_relevances = f(nw, pw, px, nx)
-
-        R = alpha * activator_relevances - beta * inhibitor_relevances
+        R = f(pw, nw, px, nx)
 
         return R
 

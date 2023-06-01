@@ -77,11 +77,14 @@ def load_model(name, device, is_qa=False):
 def load_tokenizer(name):
     return AutoTokenizer.from_pretrained(name)
 
-
+# [SEP]: 102, [CLS]: 101
 def preprocess_sample(text, tokenizer, device, dataset):
-    special_tokens = {'[SEP]', '[CLS]'}
-    special_idxs = {101, 102}
+    special_tokens = {'[SEP]'}
+    special_idxs = {102}
+
     if dataset in ['qqp', 'mnli']:
+        special_tokens = {'[CLS]'}
+        special_idxs = {101}
         sentence1_key, sentence2_key = task_to_keys[dataset]
         args = (
             (text[sentence1_key],) if sentence2_key is None else (text[sentence1_key], text[sentence2_key])

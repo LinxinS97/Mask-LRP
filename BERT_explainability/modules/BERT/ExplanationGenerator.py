@@ -32,13 +32,13 @@ class Generator:
     
 
     def AttCAT(self, input_ids, attention_mask,
-               index=None, start_layer=0, output_attentions=False, 
+               index=None, start_layer=0, output_attentions=False,
                head_mask=None, token_type_ids=None):
 
-        result = self.model(input_ids=input_ids, 
-                            attention_mask=attention_mask, 
+        result = self.model(input_ids=input_ids,
+                            attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
-                            head_mask=head_mask, 
+                            head_mask=head_mask,
                             output_hidden_states=True)
         blocks = self.model.bert.encoder.layer
 
@@ -96,9 +96,9 @@ class Generator:
                      index=None, start_layer=0, output_attentions=False, 
                      head_mask=None, token_type_ids=None):
         
-        result = self.model(input_ids=input_ids, 
-                            attention_mask=attention_mask, 
-                            # token_type_ids=token_type_ids,
+        result = self.model(input_ids=input_ids,
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids,
                             head_mask=head_mask, 
                             output_attentions=output_attentions, 
                             output_hidden_states=True)
@@ -154,7 +154,7 @@ class Generator:
             grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
             cam = grad * cam
 
-            head_contr = cam.clamp(min=0).mean(dim=[1, 2])
+            head_contr = cam.mean(dim=[1, 2])
             cam = cam.clamp(min=0).mean(dim=0)
             head_contrs.append(head_contr.detach().cpu().numpy())
 
