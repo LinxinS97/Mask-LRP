@@ -6,7 +6,6 @@ from torch.nn import CrossEntropyLoss, MSELoss
 import torch.nn as nn
 from typing import List, Any
 import torch
-from BERT_rationale_benchmark.models.model_utils import PaddedSequence
 from transformers.modeling_outputs import SequenceClassifierOutput, QuestionAnsweringModelOutput
 
 
@@ -180,63 +179,6 @@ class BertForQuestionAnswering(BertPreTrainedModel):
         return cam
 
 
-# this is the actual classifier we will be using
-class BertClassifier(nn.Module):
-    """Thin wrapper around BertForSequenceClassification"""
-
-    def __init__(self,
-                 bert_dir: str,
-                 pad_token_id: int,
-                 cls_token_id: int,
-                 sep_token_id: int,
-                 num_labels: int,
-                 max_length: int = 512,
-                 use_half_precision=True):
-        super(BertClassifier, self).__init__()
-        bert = BertForSequenceClassification.from_pretrained(bert_dir, num_labels=num_labels)
-        if use_half_precision:
-            import apex
-            bert = bert.half()
-        self.bert = bert
-        self.pad_token_id = pad_token_id
-        self.cls_token_id = cls_token_id
-        self.sep_token_id = sep_token_id
-        self.max_length = max_length
-
-    def forward(self,
-                query: List[torch.tensor],
-                docids: List[Any],
-                document_batch: List[torch.tensor]):
-        assert len(query) == len(document_batch)
-        print(query)
-        # note about device management:
-        # since distributed training is enabled, the inputs to this module can be on *any* device (preferably cpu, since we wrap and unwrap the module)
-        # we want to keep these params on the input device (assuming CPU) for as long as possible for cheap memory access
-        target_device = next(self.parameters()).device
-        cls_token = torch.tensor([self.cls_token_id]).to(device=document_batch[0].device)
-        sep_token = torch.tensor([self.sep_token_id]).to(device=document_batch[0].device)
-        input_tensors = []
-        position_ids = []
-        for q, d in zip(query, document_batch):
-            if len(q) + len(d) + 2 > self.max_length:
-                d = d[:(self.max_length - len(q) - 2)]
-            input_tensors.append(torch.cat([cls_token, q, sep_token, d]))
-            position_ids.append(torch.tensor(list(range(0, len(q) + 1)) + list(range(0, len(d) + 1))))
-        bert_input = PaddedSequence.autopad(input_tensors, batch_first=True, padding_value=self.pad_token_id,
-                                            device=target_device)
-        positions = PaddedSequence.autopad(position_ids, batch_first=True, padding_value=0, device=target_device)
-        (classes,) = self.bert(bert_input.data,
-                               attention_mask=bert_input.mask(on=0.0, off=float('-inf'), device=target_device),
-                               position_ids=positions.data)
-        assert torch.all(classes == classes)  # for nans
-
-        print(input_tensors[0])
-        print(self.relprop()[0])
-
-        return classes
-
-    def relprop(self, cam=None, **kwargs):
-        return self.bert.relprop(cam, **kwargs)
 
 
 if __name__ == '__main__':

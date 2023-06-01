@@ -336,14 +336,9 @@ if __name__ == '__main__':
             aopc.append(result[0])
             logodds += result[1]
             kendaltaus += result[2]
-        aopc = np.array(aopc)
-        logodds = np.array(logodds)
-        if dataset == 'mnli':
-            aopc = np.mean(aopc[~np.isnan(aopc)])
-            logodds = np.mean(logodds[~np.isnan(logodds)])
-        else:
-            aopc = np.mean(aopc)
-            logodds = np.mean(logodds)
+            
+        aopc = np.mean(aopc)
+        logodds = np.mean(logodds)
         k = np.mean(kendaltaus)
 
         print(aopc, logodds, k)
