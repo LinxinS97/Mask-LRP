@@ -118,7 +118,7 @@ def calc_cls_metrics(dataset, data_name, model, tokenizer, head_mask=None, expl_
         trunc_words_num = [int(g) for g in np.round(granularity * total_len)]
         trunc_words_num = list(dict.fromkeys(trunc_words_num))
         
-        _, original_prob = predict(model, input_ids, target)
+        _, original_prob = predict(model, input_ids, target, seg_ids=token_type_ids)
 
         # if data_name == 'qqp' and (target == 1 or original_prob < 0.5):
         #     continue
@@ -133,7 +133,7 @@ def calc_cls_metrics(dataset, data_name, model, tokenizer, head_mask=None, expl_
         for num in trunc_words_num[1:]:
             replaced_text_ids = replace_words(sorted_idx, text_words, input_ids, num, special_tokens=special_tokens)
 
-            rep_class, rep_prob = predict(model, replaced_text_ids, target)
+            rep_class, rep_prob = predict(model, replaced_text_ids, target, seg_ids=token_type_ids)
 
             instance_degradation_probs.append(rep_prob)
             instance_degradation_accs.append(rep_class == target)
