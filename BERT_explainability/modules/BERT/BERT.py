@@ -355,7 +355,6 @@ class BertSelfAttention(RelProp):
         outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
         return outputs
 
-
     def relprop(self, cam, **kwargs):
         # Assume output_attentions == False
         cam = self.transpose_for_scores(cam)
@@ -364,12 +363,16 @@ class BertSelfAttention(RelProp):
         if self.head_mask is not None:
             (cam1, cam2) = self.matmul2.relprop(cam * self.head_mask, **kwargs)
             (cam1_preserve, _) = self.matmul2.relprop(cam, **kwargs)
+            cam1 /= 2
+            cam2 /= 2
+
+            self.save_attn_cam(cam1_preserve)
         else:
             (cam1, cam2) = self.matmul2.relprop(cam, **kwargs)
-        cam1 /= 2
-        cam2 /= 2
+            cam1 /= 2
+            cam2 /= 2
 
-        self.save_attn_cam(cam1_preserve)
+            self.save_attn_cam(cam1)
 
         cam1 = self.dropout.relprop(cam1, **kwargs)
         cam1 = self.softmax.relprop(cam1, **kwargs)

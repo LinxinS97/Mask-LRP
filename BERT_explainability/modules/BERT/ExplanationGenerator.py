@@ -310,11 +310,10 @@ class Generator:
         one_hot.backward(retain_graph=True)
 
         self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
-
         grad = self.model.bert.encoder.layer[-1].attention.self.get_attn_gradients()
 
         grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
-        grad = grad.mean(dim=[1, 2], keepdim=True)
-        grad[:, 0, 0] = 0
+        grad = grad.mean(dim=[0, 1], keepdim=True).clamp(min=0).squeeze(0)
+        grad[:, 0] = 0
         
-        return grad[:, 0].detach().cpu().numpy(), None
+        return grad.detach().cpu().numpy(), None

@@ -107,7 +107,6 @@
             ],
             "justMyCode": false,
         },
-        
         {
             "name": "run sst2 gradcam synt_pos",
             "type": "python",
@@ -116,15 +115,30 @@
             "console": "integratedTerminal",
             "args": [
                 "--dataset", "sst2",
-                "--num-process", "10",
-                "--devices", "0,1,2,3",
+                "--num-process", "1",
+                "--devices", "0",
+                "--expl-method", "generate_gradcam",
+                "--synt-thres", "0.46,0.43,0.76,0.72",
+                "--mask-type", "synt_pos"
+            ],
+            "justMyCode": false,
+        },
+        {
+            "name": "run sst2 attngradcam synt_pos",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/test.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--dataset", "sst2",
+                "--num-process", "1",
+                "--devices", "0",
                 "--expl-method", "generate_attn_gradcam",
                 "--synt-thres", "0.46,0.43,0.76,0.72",
                 "--mask-type", "synt_pos"
             ],
             "justMyCode": false,
         },
-        
         {
             "name": "run sst2 lrplast synt_pos",
             "type": "python",
@@ -377,10 +391,8 @@
             "args": [
                 "--dataset", "qqp",
                 "--num-process", "10",
-                "--devices", "0,1,2,3",
+                "--devices", "0,2",
                 "--expl-method", "AttCAT",
-                "--synt-thres", "0.55,0.39,0.82,0.45",
-                "--mask-type", "synt_pos"
             ],
             "justMyCode": false,
         },

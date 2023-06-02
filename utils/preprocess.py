@@ -83,8 +83,6 @@ def preprocess_sample(text, tokenizer, device, dataset):
     special_idxs = {102}
 
     if dataset in ['qqp', 'mnli']:
-        special_tokens = {'[CLS]'}
-        special_idxs = {101}
         sentence1_key, sentence2_key = task_to_keys[dataset]
         args = (
             (text[sentence1_key],) if sentence2_key is None else (text[sentence1_key], text[sentence2_key])
