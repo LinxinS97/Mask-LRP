@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 __all__ = ['forward_hook', 'Clone', 'Add', 'Cat', 'ReLU', 'GELU', 'Dropout', 'BatchNorm2d', 'Linear', 'MaxPool2d',
            'AdaptiveAvgPool2d', 'AvgPool2d', 'Conv2d', 'Sequential', 'safe_divide', 'einsum', 'Softmax', 'IndexSelect',
-           'LayerNorm', 'AddEye', 'Tanh', 'MatMul', 'Mul', 'RelProp']
+           'LayerNorm', 'AddEye', 'Tanh', 'MatMul', 'Mul', 'Div', 'RelProp', 'Conv1D']
 
 
 def safe_divide(a, b):
@@ -75,8 +75,14 @@ class ReLU(nn.ReLU, RelProp):
 class GELU(nn.GELU, RelProp):
     pass
 
+
 class Softmax(nn.Softmax, RelProp):
     pass
+
+
+class Div(RelPropSimple):
+    def forward(self, inputs):
+        return torch.div(*inputs)
 
 
 class Mul(RelPropSimple):
@@ -297,3 +303,33 @@ class Conv2d(nn.Conv2d, RelProp):
 
             R = alpha * activator_relevances - beta * inhibitor_relevances
         return R
+
+
+class Conv1D(RelProp):
+
+    def __init__(self, nf, nx):
+        super().__init__()
+        self.nf = nf
+        self.weight = nn.Parameter(torch.empty(nx, nf))
+        self.bias = nn.Parameter(torch.zeros(nf))
+        self.matmul = MatMul()
+        self.add = Add()
+        self.size_in = None
+        nn.init.normal_(self.weight, std=0.02)
+
+    def forward(self, x):
+        self.size_in = x.size()
+        size_out = x.size()[:-1] + (self.nf,)
+        x = self.matmul((x.view(-1, x.size(-1)), self.weight))
+        x = self.add((self.bias, x))
+        x = x.view(size_out)
+        return x
+    
+    def relprop(self, R, **kwargs):
+        _, cam = self.add.relprop(R.view(R.shape[1:]), **kwargs)
+        cam, _ = self.matmul.relprop(cam, **kwargs)
+        cam = cam / 2
+        cam = cam.view(self.size_in)
+
+        return cam
+

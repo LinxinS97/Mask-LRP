@@ -17,9 +17,9 @@ def cal_aopc(original_probs, degradation_probs):
         diffs.append(diffs_k)
 
     result = np.mean(diffs, axis=0)
-    aopc = np.mean(result)
+    # aopc = np.mean(result)
     
-    return aopc
+    return result
 
 
 def cal_logodds(original_probs, degradation_probs):
@@ -35,9 +35,9 @@ def cal_logodds(original_probs, degradation_probs):
         ratios.append(ratios_k)
 
     result = np.mean(ratios, axis=0)
-    logodds = np.mean(result)
+    # logodds = np.mean(result)
     
-    return logodds
+    return result
 
 
 def truncate_words(sorted_idx, text_words, text_ids, replaced_num, seg_ids=None, special_tokens=None):
@@ -57,14 +57,12 @@ def truncate_words(sorted_idx, text_words, text_ids, replaced_num, seg_ids=None,
 
 
 def replace_words(sorted_idx, text_words, text_ids, replaced_num, data_name=None):
+    
     special_tokens = ["[CLS]", "[SEP]"]
-    special_idxs = [101, 102]
-
     mask_id = 0
-
     to_be_replaced_idx = []
-    i= 0
 
+    i= 0
     while len(to_be_replaced_idx) < replaced_num and i != len(sorted_idx) - 1:
         current_idx = sorted_idx[i]
         if text_words[current_idx] not in special_tokens:
@@ -74,9 +72,6 @@ def replace_words(sorted_idx, text_words, text_ids, replaced_num, data_name=None
     replaced_text_ids[0, to_be_replaced_idx] = mask_id
 
     return replaced_text_ids
-
-
-def cal_kendaltau(attribution1, attribution2):
 
     sorted_idx1 = np.argsort(-attribution1)
     sorted_idx2 = np.argsort(-attribution2)

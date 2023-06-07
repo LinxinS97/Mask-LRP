@@ -18,15 +18,13 @@ def compute_rollout_attention(all_layer_matrices, start_layer=0):
 
 
 class Generator:
-    def __init__(self, model, is_qa=False, is_start=False):
+    def __init__(self, model, is_qa=False, is_start=False, model_name='bert'):
         self.model = model
         self.device = model.device
         self.model.eval()
         self.is_qa = is_qa
         self.is_start = is_start
-
-    def forward(self, input_ids, attention_mask):
-        return self.model(input_ids, attention_mask)
+        self.model_name = model_name
     
 
     def AttCAT(self, input_ids, attention_mask,
@@ -38,7 +36,10 @@ class Generator:
                             token_type_ids=token_type_ids,
                             head_mask=head_mask,
                             output_hidden_states=True)
-        blocks = self.model.bert.encoder.layer
+        if 'bert' in self.model_name:
+            blocks = self.model.__dict__['_modules'][self.model_name].encoder.layer
+        elif 'gpt' in self.model_name:
+            blocks = self.model.transformer.h
 
         if self.is_qa:
             hs = result.hidden_states
@@ -76,7 +77,10 @@ class Generator:
         for blk_id in range(len(blocks)):
             hs_grads = hs[blk_id].grad
             
-            att = blocks[blk_id].attention.self.get_attn().squeeze(0)
+            if 'bert' in self.model_name:
+                att = blocks[blk_id].attention.self.get_attn().squeeze(0)
+            elif 'gpt' in self.model_name:
+                att = blocks[blk_id].attn.get_attn().squeeze(0)
             att = att.mean(dim=0)
             att = att.mean(dim=0)
             
@@ -91,8 +95,8 @@ class Generator:
 
 
     def GAE(self, input_ids, attention_mask,
-                     index=None, start_layer=0, output_attentions=False, 
-                     head_mask=None, token_type_ids=None):
+            index=None, start_layer=0, output_attentions=False, 
+            head_mask=None, token_type_ids=None):
         
         result = self.model(input_ids=input_ids,
                             attention_mask=attention_mask,
@@ -141,12 +145,19 @@ class Generator:
 
         cams = []
         head_contrs = []
-        blocks = self.model.bert.encoder.layer
+        if 'bert' in self.model_name:
+            blocks = self.model.__dict__['_modules'][self.model_name].encoder.layer
+        elif 'gpt' in self.model_name:
+            blocks = self.model.transformer.h
 
         for blk_id, blk in enumerate(blocks):
             # Transformer LRP
-            grad = blk.attention.self.get_attn_gradients()
-            cam = blk.attention.self.get_attn_cam()
+            if 'bert' in self.model_name:
+                grad = blk.attention.self.get_attn_gradients()
+                cam = blk.attention.self.get_attn_cam()
+            elif 'gpt' in self.model_name:
+                grad = blk.attn.get_attn_gradients()
+                cam = blk.attn.get_attn_cam()
 
             cam = cam[0].reshape(-1, cam.shape[-1], cam.shape[-1])
             grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
@@ -190,7 +201,10 @@ class Generator:
 
         self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
 
-        cam = self.model.bert.encoder.layer[-1].attention.self.get_attn_cam()[0]
+        if 'bert' in self.model_name:
+            cam = self.model.__dict__['_modules'][self.model_name].encoder.layer[-1].attention.self.get_attn_cam()[0]
+        else:
+            cam = self.model.transformer.h[-1].attn.get_attn_cam()[0]
         cam = cam.clamp(min=0).mean(dim=0).unsqueeze(0)
         cam[:, 0, 0] = 0
         return cam[:, 0].detach().cpu().numpy(), None
@@ -228,11 +242,18 @@ class Generator:
     def generate_attn_last_layer(self, input_ids, attention_mask,
                                  index=None, start_layer=0, output_attentions=False, 
                                  head_mask=None, token_type_ids=None):
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)[0]
-        cam = self.model.bert.encoder.layer[-1].attention.self.get_attn()[0]
+        self.model(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)[0]
+        if 'bert' in self.model_name:
+            cam = self.model.__dict__['_modules'][self.model_name].encoder.layer[-1].attention.self.get_attn()[0]
+        else:
+            cam = self.model.transformer.h[-1].attn.get_attn()[0]
         cam = cam.mean(dim=0).unsqueeze(0)
         cam[:, 0, 0] = 0
-        return cam[:, 0].detach().cpu().numpy(), None
+
+        if self.is_qa:
+            return torch.mean(cam, dim=[0, 1]).detach().cpu().numpy(), None
+        else:
+            return cam[:, 0].detach().cpu().numpy(), None
 
 
     def generate_rollout(self, input_ids, attention_mask,
@@ -242,15 +263,24 @@ class Generator:
         output = self.model(input_ids=input_ids, 
                             attention_mask=attention_mask, 
                             token_type_ids=token_type_ids)[0]
-        blocks = self.model.bert.encoder.layer
+        if 'bert' in self.model_name:
+            blocks = self.model.__dict__['_modules'][self.model_name].encoder.layer
+        elif 'gpt' in self.model_name:
+            blocks = self.model.transformer.h
         all_layer_attentions = []
         for blk in blocks:
-            attn_heads = blk.attention.self.get_attn()
+            if 'bert' in self.model_name:
+                attn_heads = blk.attention.self.get_attn()
+            elif 'gpt' in self.model_name:
+                attn_heads = blk.attn.get_attn()
             avg_heads = (attn_heads.sum(dim=1) / attn_heads.shape[1]).detach()
             all_layer_attentions.append(avg_heads)
         rollout = compute_rollout_attention(all_layer_attentions, start_layer=start_layer)
         rollout[:, 0, 0] = 0
-        return rollout[:, 0], None
+        if self.is_qa:
+            return np.mean(rollout, axis=(0, 1)), None
+        else:
+            return rollout[:, 0], None
 
 
     def generate_attn_gradcam(self, input_ids, attention_mask,
@@ -276,8 +306,12 @@ class Generator:
 
         self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
 
-        cam = self.model.bert.encoder.layer[-1].attention.self.get_attn()
-        grad = self.model.bert.encoder.layer[-1].attention.self.get_attn_gradients()
+        if 'bert' in self.model_name:
+            grad = self.model.__dict__['_modules'][self.model_name].encoder.layer[-1].attention.self.get_attn_gradients()
+            cam = self.model.__dict__['_modules'][self.model_name].encoder.layer[-1].attention.self.get_attn()
+        elif 'gpt' in self.model_name:
+            grad = self.model.transformer.h.layer[-1].attn.get_attn_gradients()
+            cam = self.model.transformer.h.layer[-1].attn.get_attn_cam()
 
         cam = cam[0].reshape(-1, cam.shape[-1], cam.shape[-1])
         grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
@@ -310,7 +344,10 @@ class Generator:
         one_hot.backward(retain_graph=True)
 
         self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
-        grad = self.model.bert.encoder.layer[-1].attention.self.get_attn_gradients()
+        if 'bert' in self.model_name:
+            grad = self.model.__dict__['_modules'][self.model_name].encoder.layer[-1].attention.self.get_attn_gradients()
+        elif 'gpt' in self.model_name:
+            grad = self.model.transformer.h.layer[-1].attn.get_attn_gradients()
 
         grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
         grad = grad.mean(dim=[0, 1], keepdim=True).clamp(min=0).squeeze(0)

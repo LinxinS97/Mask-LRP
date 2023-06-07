@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from typing import List, Optional
 
 import torch
 from torch import nn
@@ -7,6 +8,7 @@ from transformers.modeling_outputs import BaseModelOutputWithPooling, BaseModelO
 from BERT_explainability.modules.layers_ours import *
 from transformers import (
     BertPreTrainedModel,
+    RobertaPreTrainedModel,
 )
 
 ACT2FN = {
@@ -526,13 +528,13 @@ class BertLayer(nn.Module):
 
 
 class BertModel(BertPreTrainedModel):
-    def __init__(self, config):
+    def __init__(self, config, add_pooling_layer=True):
         super().__init__(config)
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
         self.encoder = BertEncoder(config)
-        self.pooler = BertPooler(config)
+        self.pooler = BertPooler(config) if add_pooling_layer else None
 
         self.init_weights()
 
@@ -625,7 +627,7 @@ class BertModel(BertPreTrainedModel):
             return_dict=return_dict,
         )
         sequence_output = encoder_outputs[0]
-        pooled_output = self.pooler(sequence_output)
+        pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
         if not return_dict:
             return (sequence_output, pooled_output) + encoder_outputs[1:]
@@ -638,10 +640,10 @@ class BertModel(BertPreTrainedModel):
         )
 
     def relprop(self, cam, **kwargs):
-        cam = self.pooler.relprop(cam, **kwargs)
+        cam = self.pooler.relprop(cam, **kwargs) if self.pooler is not None else cam
         cam = self.encoder.relprop(cam, **kwargs)
-        cam = self.embeddings.relprop(cam, **kwargs)[1]
         return cam
+
 
 
 if __name__ == '__main__':
