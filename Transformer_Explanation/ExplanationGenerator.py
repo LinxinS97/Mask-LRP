@@ -27,6 +27,89 @@ class Generator:
         self.model_name = model_name
     
 
+    def MGAE(self, input_ids, attention_mask,
+            index=None, start_layer=0, output_attentions=False, 
+            head_mask=None, token_type_ids=None):
+        
+        result = self.model(input_ids=input_ids,
+                            attention_mask=attention_mask,
+                            token_type_ids=token_type_ids,
+                            head_mask=head_mask, 
+                            output_attentions=output_attentions, 
+                            output_hidden_states=False)
+
+        if self.is_qa:
+            output = result['logits']
+
+            one_hot_vector = np.zeros((1, *output[0].size()), dtype=np.float32)
+            if self.is_start:
+                if index == None:
+                    index = np.argmax(output[:, :, 0].cpu().data.numpy(), axis=-1)[0]
+                one_hot_vector[0, index, 0] = 1  # start index logit
+                pred = output[0][index, 0]
+            else:
+                if index == None:
+                    index = np.argmax(output[:, :, 1].cpu().data.numpy(), axis=-1)[0]
+                one_hot_vector[0, index, 1] = 1  # end index logit
+                pred = output[0][index, 1]
+            
+            kwargs = {"alpha": 1, "index": index}
+
+            self.model.zero_grad()
+            pred.backward(retain_graph=True)  # chain rule update all parameters in the model
+
+        else:
+            kwargs = {"alpha": 1}
+            output = result[0]
+            
+            if index == None:
+                index = np.argmax(output.cpu().data.numpy(), axis=-1)
+
+            one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
+            one_hot[0, index] = 1  # y
+            one_hot_vector = one_hot
+            one_hot = torch.from_numpy(one_hot).requires_grad_(True)  # fx
+            one_hot = torch.sum(one_hot.to(self.model.device) * output)  # sum(y * fx)
+
+            self.model.zero_grad()
+            one_hot.backward(retain_graph=True)  # chain rule update all parameters in the model
+
+        self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
+
+        cams = []
+        head_contrs = []
+        if 'bert' in self.model_name:
+            blocks = self.model.__dict__['_modules'][self.model_name].encoder.layer
+        elif 'gpt' in self.model_name:
+            blocks = self.model.transformer.h
+
+        for blk_id, blk in enumerate(blocks):
+            # Transformer LRP
+            if 'bert' in self.model_name:
+                grad = blk.attention.self.get_attn_gradients()
+                cam = blk.attention.self.get_attn_cam()
+            elif 'gpt' in self.model_name:
+                grad = blk.attn.get_attn_gradients()
+                cam = blk.attn.get_attn_cam()
+
+            cam = cam[0].reshape(-1, cam.shape[-1], cam.shape[-1])
+            grad = grad[0].reshape(-1, grad.shape[-1], grad.shape[-1])
+            cam = grad * cam
+
+            head_contr = cam.mean(dim=[1, 2])
+            cam = cam.clamp(min=0).mean(dim=0)
+            head_contrs.append(head_contr.detach().cpu().numpy())
+
+            cams.append(cam.unsqueeze(0))
+            
+        rollout = compute_rollout_attention(cams, start_layer=start_layer)
+        rollout[:, 0, 0] = 0
+        if self.is_qa:
+            return rollout[:, index].reshape(-1), head_contrs
+        else:
+            return rollout[:, 0], head_contrs
+
+
     def AttCAT(self, input_ids, attention_mask,
                index=None, start_layer=0, output_attentions=False,
                head_mask=None, token_type_ids=None):
@@ -94,52 +177,33 @@ class Generator:
         return cat_expln.detach().cpu().numpy()
 
 
-    def GAE(self, input_ids, attention_mask,
-            index=None, start_layer=0, output_attentions=False, 
-            head_mask=None, token_type_ids=None):
+    def GAE(self, input_ids, 
+            attention_mask,
+            index=None, 
+            start_layer=0, 
+            output_attentions=False,
+            token_type_ids=None):
         
         result = self.model(input_ids=input_ids,
                             attention_mask=attention_mask,
                             token_type_ids=token_type_ids,
-                            head_mask=head_mask, 
                             output_attentions=output_attentions, 
                             output_hidden_states=False)
 
-        if self.is_qa:
-            output = result['logits']
+        kwargs = {"alpha": 1}
+        output = result[0]
+        
+        if index == None:
+            index = np.argmax(output.cpu().data.numpy(), axis=-1)
 
-            one_hot_vector = np.zeros((1, *output[0].size()), dtype=np.float32)
-            if self.is_start:
-                if index == None:
-                    index = np.argmax(output[:, :, 0].cpu().data.numpy(), axis=-1)[0]
-                one_hot_vector[0, index, 0] = 1  # start index logit
-                pred = output[0][index, 0]
-            else:
-                if index == None:
-                    index = np.argmax(output[:, :, 1].cpu().data.numpy(), axis=-1)[0]
-                one_hot_vector[0, index, 1] = 1  # end index logit
-                pred = output[0][index, 1]
-            
-            kwargs = {"alpha": 1, "index": index}
+        one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
+        one_hot[0, index] = 1  # y
+        one_hot_vector = one_hot
+        one_hot = torch.from_numpy(one_hot).requires_grad_(True)  # fx
+        one_hot = torch.sum(one_hot.to(self.model.device) * output)  # sum(y * fx)
 
-            self.model.zero_grad()
-            pred.backward(retain_graph=True)  # chain rule update all parameters in the model
-
-        else:
-            kwargs = {"alpha": 1}
-            output = result[0]
-            
-            if index == None:
-                index = np.argmax(output.cpu().data.numpy(), axis=-1)
-
-            one_hot = np.zeros((1, output.size()[-1]), dtype=np.float32)
-            one_hot[0, index] = 1  # y
-            one_hot_vector = one_hot
-            one_hot = torch.from_numpy(one_hot).requires_grad_(True)  # fx
-            one_hot = torch.sum(one_hot.to(self.model.device) * output)  # sum(y * fx)
-
-            self.model.zero_grad()
-            one_hot.backward(retain_graph=True)  # chain rule update all parameters in the model
+        self.model.zero_grad()
+        one_hot.backward(retain_graph=True)  # chain rule update all parameters in the model
 
         self.model.relprop(torch.tensor(one_hot_vector).to(input_ids.device), **kwargs)
 
