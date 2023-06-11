@@ -2,9 +2,9 @@ import torch
 import json
 import pickle as pkl
 import numpy as np
-from BERT_explainability.modules.BERT.BertForTask import BertForSequenceClassification, BertForQuestionAnswering
-from BERT_explainability.modules.BERT.RobertaForTask import RobertaForQuestionAnswering
-from BERT_explainability.modules.GPT.GPT_model import GPT2ForQuestionAnswering
+from Transformer_Explanation.modules.BERT.BertForTask import BertForSequenceClassification, BertForQuestionAnswering
+from Transformer_Explanation.modules.BERT.RobertaForTask import RobertaForQuestionAnswering
+from Transformer_Explanation.modules.GPT.GPT_model import GPT2ForQuestionAnswering
 from transformers import AutoTokenizer
 
 

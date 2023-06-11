@@ -16,7 +16,7 @@ from utils.preprocess import preprocess_sample, load_dataset_json, load_model_an
 os.environ['TOKENIZERS_PARALLELISM'] = 'true'
 DATASET = 'squadv2'  # yelp qqp imdb squadv1 squadv2 mnli
 DEVICE_NUM = 1
-DATA_PATH = f'/home/linxin/data'
+DATA_PATH = f'/home/data'
 DEVICE = torch.device(f'cuda:{DEVICE_NUM}')  # 2 and 3 is available
 
 task_to_keys = {
@@ -349,18 +349,18 @@ if __name__ == '__main__':
     if DATASET in ['squadv1', 'squadv2']:
         _model = f'_{model_name.split("/")[1].split("-")[0]}'
     
-    with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_total_deprel_stats_res.pkl', 'wb') as f:
+    with open(f'/home/xai/Mask_LRP/parse_res/{DATASET}{_model}_total_deprel_stats_res.pkl', 'wb') as f:
         pkl.dump(stats_res, f)
 
-    with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_total_deprel_hit_res.pkl', 'wb') as f:
+    with open(f'/home/xai/Mask_LRP/parse_res/{DATASET}{_model}_total_deprel_hit_res.pkl', 'wb') as f:
         pkl.dump(deprel_hit, f)
 
-    with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_total_deprel_miss_res.pkl', 'wb') as f:
+    with open(f'/home/xai/Mask_LRP/parse_res/{DATASET}{_model}_total_deprel_miss_res.pkl', 'wb') as f:
         pkl.dump(deprel_miss, f)
 
-    with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_rel_ppos_res.pkl', 'wb') as f:
+    with open(f'/home/xai/Mask_LRP/parse_res/{DATASET}{_model}_rel_ppos_res.pkl', 'wb') as f:
         pkl.dump(rel_ppos_res, f)
 
-    with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_rel_npos_res.pkl', 'wb') as f:
+    with open(f'/home/xai/Mask_LRP/parse_res/{DATASET}{_model}_rel_npos_res.pkl', 'wb') as f:
         pkl.dump(rel_npos_res, f)
 

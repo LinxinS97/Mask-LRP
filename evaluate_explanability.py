@@ -1,4 +1,4 @@
-from BERT_explainability.ExplanationGenerator import Generator
+from Transformer_Explanation.ExplanationGenerator import Generator
 from utils.metrices import replace_words, cal_aopc, cal_logodds, cal_count, perfect_count
 from self_parser import parser
 from utils.preprocess import preprocess_sample, load_dataset_json, load_model_and_tokenizer, generate_head_mask

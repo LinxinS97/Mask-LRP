@@ -9,7 +9,7 @@ import torch.utils.checkpoint
 from torch import nn
 from torch.cuda.amp import autocast
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
-from BERT_explainability.modules.layers_ours import *
+from Transformer_Explanation.modules.layers_ours import *
 
 from transformers import GPT2PreTrainedModel
 from transformers.modeling_outputs import SequenceClassifierOutput, SequenceClassifierOutputWithPast
