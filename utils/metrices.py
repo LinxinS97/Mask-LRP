@@ -1,7 +1,6 @@
 import numpy as np
 import math
 import scipy.stats as stats
-from tqdm import tqdm
 
 
 def cal_aopc(original_probs, degradation_probs):

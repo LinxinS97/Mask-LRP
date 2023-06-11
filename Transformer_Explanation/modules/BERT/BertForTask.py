@@ -1,12 +1,9 @@
 from transformers import BertPreTrainedModel
-from transformers.utils import logging
 from Transformer_Explanation.modules.layers_ours import *
 from Transformer_Explanation.modules.BERT.BERT import BertModel
 from torch.nn import CrossEntropyLoss, MSELoss
-import torch.nn as nn
-from typing import List, Any
 import torch
-from transformers.modeling_outputs import SequenceClassifierOutput, QuestionAnsweringModelOutput
+from transformers.modeling_outputs import SequenceClassifierOutput
 
 
 class BertForSequenceClassification(BertPreTrainedModel):

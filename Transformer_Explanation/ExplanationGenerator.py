@@ -22,6 +22,7 @@ class Generator:
         self.model = model
         self.device = model.device
         self.model.eval()
+        
         self.is_qa = is_qa
         self.is_start = is_start
         self.model_name = model_name

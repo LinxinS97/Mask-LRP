@@ -1,15 +1,10 @@
 from __future__ import absolute_import
-from typing import List, Optional
-
 import torch
 from torch import nn
 import math
 from transformers.modeling_outputs import BaseModelOutputWithPooling, BaseModelOutput
 from Transformer_Explanation.modules.layers_ours import *
-from transformers import (
-    BertPreTrainedModel,
-    RobertaPreTrainedModel,
-)
+from transformers import BertPreTrainedModel
 
 ACT2FN = {
     "relu": ReLU,

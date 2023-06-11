@@ -1,19 +1,14 @@
-import math
-import os
-import warnings
-from dataclasses import dataclass
 from typing import Optional, Tuple, Union
 
 import torch
 import torch.utils.checkpoint
 from torch import nn
-from torch.cuda.amp import autocast
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
 from Transformer_Explanation.modules.layers_ours import *
 
 from transformers import GPT2PreTrainedModel
 from transformers.modeling_outputs import SequenceClassifierOutput, SequenceClassifierOutputWithPast
-from transformers.modeling_outputs import BaseModelOutputWithPooling, BaseModelOutput
+from transformers.modeling_outputs import BaseModelOutput
 
 ACT2FN = {
     "relu": ReLU,

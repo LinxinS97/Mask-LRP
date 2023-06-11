@@ -8,21 +8,15 @@ from Transformer_Explanation.modules.GPT.GPT_model import GPT2ForQuestionAnsweri
 from transformers import AutoTokenizer
 
 
-### FOR YELP, SST2
 task_to_keys = {
-    "cola": ("sentence", None),
+    "imdb": ("text", None),
     "yelp": ("text", None),
     "mnli": ("premise", "hypothesis"),
-    "mnli-mm": ("premise", "hypothesis"),
-    "mrpc": ("sentence1", "sentence2"),
-    "qnli": ("question", "sentence"),
     "qqp": ("question1", "question2"),
-    "rte": ("sentence1", "sentence2"),
     "sst2": ("sentence", None),
-    "stsb": ("sentence1", "sentence2"),
-    "wnli": ("sentence1", "sentence2"),
+    "squadv1": ("context", "question"),
+    "squadv2": ("context", "question")
 }
-
 model_keys = {
     'bert': BertForQuestionAnswering,
     'roberta': RobertaForQuestionAnswering,
