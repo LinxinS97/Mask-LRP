@@ -3,6 +3,7 @@ all_good_vis/
 __pycache__
 *.tar
 .idea
+.vscode
 run/
 baselines/ViT/experiments/
 baselines/ViT/visualizations/
