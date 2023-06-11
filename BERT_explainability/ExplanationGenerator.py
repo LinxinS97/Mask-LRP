@@ -103,7 +103,7 @@ class Generator:
                             token_type_ids=token_type_ids,
                             head_mask=head_mask, 
                             output_attentions=output_attentions, 
-                            output_hidden_states=True)
+                            output_hidden_states=False)
 
         if self.is_qa:
             output = result['logits']

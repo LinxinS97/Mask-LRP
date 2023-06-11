@@ -314,7 +314,7 @@ if __name__ == '__main__':
     # SQUADv2 (bert base): ericRosello/bert-base-uncased-finetuned-squad-frozen-v2
     # SQUADv2 (GPT2): anas-awadalla/gpt2-span-head-finetuned-squad
     # SQUADv2 (roberta): 21iridescent/RoBERTa-base-finetuned-squad2-lwt
-    model_name = 'anas-awadalla/gpt2-span-head-finetuned-squad'
+    model_name = 'ericRosello/bert-base-uncased-finetuned-squad-frozen-v2'
     model, tokenizer = load_model_and_tokenizer(model_name, device=DEVICE, is_qa=True)
 
     deprel_hit = np.zeros((model.config.num_hidden_layers, model.config.num_attention_heads, len(deprel_map.keys())))
@@ -363,7 +363,4 @@ if __name__ == '__main__':
 
     with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_rel_npos_res.pkl', 'wb') as f:
         pkl.dump(rel_npos_res, f)
-
-    # with open(f'/home/linxin/xai/Transformer-Explainability/parse_res/{DATASET}{_model}_total_upos_res.pkl', 'wb') as f:
-    #     pkl.dump(upos_res, f)
 
