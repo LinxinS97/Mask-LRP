@@ -3,8 +3,6 @@
 ## Introduction
 
 ### Datasets 
-<hr>
-
 Datasets parsed by Stanza can be downloaded through the link below (SST-2, IMDB and SQUADv2, others will be available after the paper accepted; datasets are uploaded through the user named "Anonymous"):
 https://drive.google.com/drive/folders/1R9HpF5_5CaR9ey5EHQozy4SIMP1Hy1nx\
 The above datasets have the following data structure (a sample in SST-2):
@@ -28,8 +26,6 @@ Here, the key "sentence" may different in other dataset (e.g., "text" in Yelp or
 
 
 ### Requirement
-<hr>
-
 Install the pytorch (through the instruction in the official homepage) and other requirement packages by
 ```
 pip install -r requirements.txt
@@ -37,17 +33,13 @@ pip install -r requirements.txt
 
 
 ### Dataset statistic for positional and syntactic information
-<hr>
-
 Put the downloaded dataset into a folder and modify the `DATA_PATH` and all the save path at the final in `attn_head_stats.py` and run
 ```
 python attn_head_stats.py
 ```
 
 
-### Result in paper
-<hr>
-
+### Reproducing results in our paper
 Run the comment below to get the evaluation result:
 ```
 python test.py --num-process [number of process you want to use, default is 1] --devices [set your GPU ids devided by ,] --dataset [name of dataset] --expl-method [name of explanation method, options can be found by --help or in the file self_parser.py]
