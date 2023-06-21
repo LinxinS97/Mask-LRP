@@ -45,4 +45,5 @@ Run the comment below to get the evaluation result:
 ```
 python test.py --num-process [number of process you want to use, default is 1] --devices [set your GPU ids devided by ,] --dataset [name of dataset] --expl-method [name of explanation method, options can be found by --help or in the file ./Transformer_Explanation/ExplanationGenerator.py]
 ```
-Note the all `--expl-method` are the function name in `./Transformer_Explanation/ExplanationGenerator.py`. If you are running our method (MLRP), you need an additional arg `--synt-thres`, which is related to the equation (7) in our manuscript and you can obtain the lambda_k from the statistic result in "Dataset statistic for positional and syntactic information".
+Note that all `--expl-method` are the member function name under class `Generator` located in `./Transformer_Explanation/ExplanationGenerator.py`. 
+If you are running our method (MLRP), you need an additional arg `--synt-thres`, which is related to the equation (7) in our manuscript and you can obtain the lambda_k from the statistic result in "Dataset statistic for positional and syntactic information".
