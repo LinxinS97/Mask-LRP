@@ -4,7 +4,8 @@
 
 ### Datasets 
 Datasets parsed by Stanza can be downloaded through the link below (SST-2, IMDB and SQUADv2, others will be available after the paper accepted; datasets are uploaded through the user named "Anonymous"):
-https://drive.google.com/drive/folders/1R9HpF5_5CaR9ey5EHQozy4SIMP1Hy1nx\
+https://drive.google.com/drive/folders/1R9HpF5_5CaR9ey5EHQozy4SIMP1Hy1nx
+
 The above datasets have the following data structure (a sample in SST-2):
 ```
 {
@@ -22,7 +23,7 @@ The above datasets have the following data structure (a sample in SST-2):
     ]
 }
 ```
-Here, the key "sentence" may different in other dataset (e.g., "text" in Yelp or "comment" in IMDB). The key "parsed" is the parsed result of the input sentences from Stanza, which contain the word with its corresponding dependency relation ("deprel", also called "syntactic relation" in our manuscript).
+Here, the key "sentence" may different in other dataset (e.g., "text" in Yelp and IMDB). The value of "parsed" is the parsed result of the input sentences from Stanza, which contain the word with its corresponding dependency relation (with the key "deprel", also called "syntactic relation" in our manuscript).
 
 
 ### Requirement
