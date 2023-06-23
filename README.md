@@ -1,12 +1,8 @@
 # PyTorch Implementation for "Better Explain Transformers by Illuminating Important Information"
 
-## Introduction
 
-### Datasets 
-Datasets parsed by Stanza can be downloaded through the link below (SST-2, IMDB and SQUADv2, others will be available after the paper accepted; datasets are uploaded through the user named "Anonymous"):
-https://drive.google.com/drive/folders/1R9HpF5_5CaR9ey5EHQozy4SIMP1Hy1nx
-
-The above datasets have the following data structure (a sample in SST-2):
+### Datasets
+We use preprocessed dataset parsed by Stanza with the data structure below:
 ```
 {
     "id": 0, 
@@ -23,27 +19,18 @@ The above datasets have the following data structure (a sample in SST-2):
     ]
 }
 ```
-Here, the key "sentence" may different in other dataset (e.g., "text" in Yelp and IMDB). The value of "parsed" is the parsed result of the input sentences from Stanza, which contain the word with its corresponding dependency relation (with the key "deprel", also called "syntactic relation" in our manuscript).
+All the parsed datasets will be opensource after accepted.
 
 
-### Requirement
-Install the pytorch (through the instruction in the official homepage) and other requirement packages by
-```
-pip install -r requirements.txt
-```
+### Details of our code.
+`evaluate_explanability.py` is the code we use to run experiment of our Table 1, 2 and 3.
 
+lambda_k in Equation (7) can be obtained by running `attn_head_stats.py`.
 
-### Dataset statistic for positional and syntactic information
-Put the downloaded dataset into a folder and modify the `DATA_PATH` and all the save path at the final in `attn_head_stats.py` and run
-```
-python attn_head_stats.py
-```
+`self_parser.py` is the args for `evaluate_explanability.py`, where the value of `--synt-thres` corresponding to lambda_k + xi_synt (Equation (7)) in our manuscript and the value of `--pos-thres` corresponding to xi_pos in our manuscript.
 
+The LRP implementation for each Transformer-based model is in `Transformer_Explanation`. 
+We provide the implementation of BERT-base, RoBERTa-base and GPT-2.
 
-### Reproducing results in our manuscript
-Run the comment below to get the evaluation result:
-```
-python test.py --num-process [number of process you want to use, default is 1] --devices [set your GPU ids devided by ,] --dataset [name of dataset] --expl-method [name of explanation method, options can be found by --help or in the file ./Transformer_Explanation/ExplanationGenerator.py]
-```
-Note that all `--expl-method` are the member function name under class `Generator` located in `./Transformer_Explanation/ExplanationGenerator.py`. 
-If you are running our method (MLRP), you need an additional arg `--synt-thres`, which is related to the equation (7) in our manuscript and you can obtain the lambda_k from the statistic result in "Dataset statistic for positional and syntactic information".
+Implementation of AOPC and LOdds are in `utils/metrices.py`.
+
