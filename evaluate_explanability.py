@@ -196,11 +196,19 @@ if __name__ == '__main__':
         special_tokens = []
         special_idxs = []
 
+    if 'llama' in model_name:
+        t_model = 'meta-llama/Llama-2-7b-hf'
+    else:
+        if dataset in ['squadv1', 'squadv2']:
+            t_model = task_model[dataset][model_name]
+        else:
+            t_model = task_model[dataset]
+
     for d in devices:
         if dataset in ['squadv1', 'squadv2']:
-            model, tokenizer = load_model_and_tokenizer(task_model[dataset][model_name], device=d, is_qa=True)
+            model, tokenizer = load_model_and_tokenizer(t_model, device=d, is_qa=True)
         else:
-            model, tokenizer = load_model_and_tokenizer(task_model[dataset], device=d)
+            model, tokenizer = load_model_and_tokenizer(t_model, device=d)
         models.append(model)
 
     tokenized_qqp = None
