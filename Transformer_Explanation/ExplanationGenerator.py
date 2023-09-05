@@ -83,6 +83,8 @@ class Generator:
             blocks = self.model.__dict__['_modules'][self.model_name].encoder.layer
         elif 'gpt' in self.model_name:
             blocks = self.model.transformer.h
+        elif 'llama' in self.model_name:
+            blocks = [l.self_attn for l in self.model.model.layers]
 
         for blk_id, blk in enumerate(blocks):
             # Transformer LRP

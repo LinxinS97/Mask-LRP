@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 __all__ = ['forward_hook', 'Clone', 'Add', 'Cat', 'ReLU', 'GELU', 'Dropout', 'BatchNorm2d', 'Linear', 'MaxPool2d',
            'AdaptiveAvgPool2d', 'AvgPool2d', 'Conv2d', 'Sequential', 'safe_divide', 'einsum', 'Softmax', 'IndexSelect',
-           'LayerNorm', 'AddEye', 'Tanh', 'MatMul', 'Mul', 'Div', 'RelProp', 'Conv1D']
+           'LayerNorm', 'AddEye', 'Tanh', 'MatMul', 'Mul', 'Div', 'RelProp', 'Conv1D', 'Mean', 'Rsqrt']
 
 
 def safe_divide(a, b):
@@ -105,6 +105,16 @@ class Dropout(nn.Dropout, RelProp):
 class MatMul(RelPropSimple):
     def forward(self, inputs):
         return torch.matmul(*inputs)
+    
+
+class Mean(RelPropSimple):
+    def forward(self, inputs, *args):
+        return torch.mean(*inputs, *args)
+    
+
+class Rsqrt(RelPropSimple):
+    def forward(self, inputs):
+        return torch.rsqrt(*inputs)
 
 
 class MaxPool2d(nn.MaxPool2d, RelPropSimple):

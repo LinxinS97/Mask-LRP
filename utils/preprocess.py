@@ -5,8 +5,11 @@ import numpy as np
 from Transformer_Explanation.modules.BERT.BertForTask import BertForSequenceClassification, BertForQuestionAnswering
 from Transformer_Explanation.modules.BERT.RobertaForTask import RobertaForQuestionAnswering
 from Transformer_Explanation.modules.GPT.GPT_model import GPT2ForQuestionAnswering
+from Transformer_Explanation.modules.LLaMA.LLaMA_model import LlamaForCausalLM
 from transformers import AutoTokenizer
 
+model = LlamaForCausalLM.from_pretrained('gpt2')
+model.generate()
 
 task_to_keys = {
     "imdb": ("text", None),
@@ -20,7 +23,8 @@ task_to_keys = {
 model_keys = {
     'bert': BertForQuestionAnswering,
     'roberta': RobertaForQuestionAnswering,
-    'gpt2': GPT2ForQuestionAnswering
+    'gpt2': GPT2ForQuestionAnswering,
+    'llama': LlamaForCausalLM
 }
 
 
