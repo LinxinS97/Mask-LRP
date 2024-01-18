@@ -19,7 +19,6 @@ We use preprocessed dataset parsed by Stanza with the data structure below:
     ]
 }
 ```
-All the parsed datasets will be opensource after accepted.
 
 
 ### Details of our code.
